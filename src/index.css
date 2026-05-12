@@ -7,6 +7,9 @@
   --card-h: 300px;
   --radius: 750px;
   --bg-gradient-color: #a48d73;
+  --ink: #1c1410;
+  --off: #f5f0e8;
+  --font: 'DM Sans', sans-serif;
   /* --bg-gradient-color: #a48d73; */
 }
 
@@ -104,4 +107,43 @@ p,
 button {
   font-family: "Poppins", sans-serif;
   margin: 0;
+}
+
+.drag-wrap {
+  /* mix-blend-mode: difference; */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+}
+
+.drag-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--off);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform-origin: center center;
+}
+
+.drag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink);
+  flex-shrink: 0;
+  opacity: 0.35;
 }

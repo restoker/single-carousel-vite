@@ -26,9 +26,9 @@ const slideData = [
 function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [currentSlide, setCurrentSlide] = useState(Math.floor(slideData.length / 2))
-  const [trackWidth, setTrackWidth] = useState<number>(0)
+  // const [trackWidth, setTrackWidth] = useState<number>(0)
   const [slideWidth, setSlideWidth] = useState<number>(0)
-  const [numSlides, setNumSlides] = useState<number>(0)
+  // const [numSlides, setNumSlides] = useState<number>(0)
   const [images] = useState(slideData)
   const angleStep = 360 / images.length;
   const [dragging, setDragging] = useState(false)
@@ -42,10 +42,11 @@ function App() {
 
     cards.forEach((card, i) => {
       // Calculate the rotation for THIS card based on the current center index
-      const cardRotation = (i - currentSlide) * angleStep;
+      const dragRotation = (offsetX / window.innerWidth) * 60;
+      const cardRotation = (i - currentSlide) * angleStep + dragRotation;
       card.style.transform = `rotate(${cardRotation}deg)`;
       // Toggle active classes
-      if (i === normalizedCurrent) {
+      if (i === normalizedCurrent && Math.abs(offsetX) < 10) {
         card.classList.add("active");
       } else {
         card.classList.remove("active");
@@ -59,17 +60,17 @@ function App() {
 
   useEffect(() => {
     const track = document.getElementById("track")
-    const numSlides = images.length
+    // const numSlides = images.length
     const slideWidth = (track?.offsetWidth || 0)
     // console.log("🚀 ~ App ~ slideWidth:", slideWidth)
-    setTrackWidth(track?.offsetWidth || 0)
+    // setTrackWidth(track?.offsetWidth || 0)
     setSlideWidth(slideWidth)
-    setNumSlides(numSlides)
+    // setNumSlides(numSlides)
   }, [images])
 
   useEffect(() => {
     updateCards()
-  }, [currentSlide])
+  }, [currentSlide, offsetX])
 
   useGSAP(() => {
     // Background color animation
@@ -90,15 +91,78 @@ function App() {
     );
   }, { scope: contentRef, dependencies: [currentSlide] });
 
+  useGSAP(() => {
+    const pillColors = [
+      { bg: '#eddfc8', color: '#231709' },
+      // { bg: '#231709', color: '#fdf2e0' },
+      // { bg: '#231709', color: '#d4c9a8' },
+      // { bg: '#fceae0', color: '#6e2e18' },
+      // { bg: '#b08840', color: '#100c06' },
+    ];
+    const pill = document.getElementById('dragPill');
+    if (!pill) return;
+
+    const dragCircle = pill.querySelector('.drag-circle') as HTMLElement;
+    const dragDots = pill.querySelectorAll('.drag-dot') as NodeListOf<HTMLElement>;
+
+    const colorTheme = pillColors[normalizedCurrent % pillColors.length];
+
+    gsap.to(dragCircle, { backgroundColor: colorTheme.bg, color: colorTheme.color, duration: 0.8 });
+    gsap.to(dragDots, { backgroundColor: colorTheme.bg, duration: 0.8 });
+  }, [currentSlide]);
+
+  useGSAP(() => {
+    const pill = document.getElementById('dragPill');
+    if (!pill) return;
+
+    gsap.set(pill, { opacity: 0, scale: 0.5, xPercent: -50, yPercent: -50 });
+
+    const xTo = gsap.quickTo(pill, "x", { duration: 0.4, ease: "power3" });
+    const yTo = gsap.quickTo(pill, "y", { duration: 0.4, ease: "power3" });
+
+    const movePill = (e: MouseEvent) => {
+      xTo(e.clientX);
+      yTo(e.clientY);
+    };
+
+    window.addEventListener("mousemove", movePill);
+
+    const showPill = () => gsap.to(pill, { opacity: 1, scale: 1, duration: 0.3 });
+    const hidePill = () => gsap.to(pill, { opacity: 0, scale: 0.5, duration: 0.3 });
+
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card) => {
+      card.addEventListener("mouseenter", showPill);
+      card.addEventListener("mouseleave", hidePill);
+    });
+
+    return () => {
+      window.removeEventListener("mousemove", movePill);
+      cards.forEach((card) => {
+        card.removeEventListener("mouseenter", showPill);
+        card.removeEventListener("mouseleave", hidePill);
+      });
+    };
+  }, []);
+
+
   return (
     <>
+      <div className="drag-wrap" id="dragPill">
+        <span className="drag-dot"></span>
+        <div className="drag-circle">Drag</div>
+        <span className="drag-dot"></span>
+      </div>
+
       <div className="stage h-dvh overflow-hidden">
         <div
           className="carousel-track"
           id="track"
+          style={{ touchAction: 'none' }}
           onMouseDown={(e) => {
             setDragging(true)
             setStartX(e.clientX)
+            setOffsetX(0)
           }}
           onMouseMove={(e) => {
             if (!dragging) return
@@ -106,8 +170,44 @@ function App() {
             setOffsetX(diff)
           }}
           onMouseUp={() => {
+            if (!dragging) return
             setDragging(false)
-            setStartX(0)
+            if (offsetX > 50) {
+              move(-1)
+            } else if (offsetX < -50) {
+              move(1)
+            }
+            setOffsetX(0)
+          }}
+          onMouseLeave={() => {
+            if (dragging) {
+              setDragging(false)
+              if (offsetX > 50) {
+                move(-1)
+              } else if (offsetX < -50) {
+                move(1)
+              }
+              setOffsetX(0)
+            }
+          }}
+          onTouchStart={(e) => {
+            setDragging(true)
+            setStartX(e.touches[0].clientX)
+            setOffsetX(0)
+          }}
+          onTouchMove={(e) => {
+            if (!dragging) return
+            const diff = e.touches[0].clientX - startX
+            setOffsetX(diff)
+          }}
+          onTouchEnd={() => {
+            if (!dragging) return
+            setDragging(false)
+            if (offsetX > 50) {
+              move(-1)
+            } else if (offsetX < -50) {
+              move(1)
+            }
             setOffsetX(0)
           }}
         >
