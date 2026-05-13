@@ -46,7 +46,7 @@ function App() {
       const cardRotation = (i - currentSlide) * angleStep + dragRotation;
       card.style.transform = `rotate(${cardRotation}deg)`;
       // Toggle active classes
-      if (i === normalizedCurrent && Math.abs(offsetX) < 10) {
+      if (i === normalizedCurrent) {
         card.classList.add("active");
       } else {
         card.classList.remove("active");

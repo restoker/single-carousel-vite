@@ -123,8 +123,8 @@ button {
 }
 
 .drag-circle {
-  width: 72px;
-  height: 72px;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
   background: var(--ink);
   color: var(--off);
@@ -140,10 +140,11 @@ button {
 }
 
 .drag-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--ink);
   flex-shrink: 0;
-  opacity: 0.35;
+  opacity: 0.95;
+  /* opacity: 0.35; */
 }
